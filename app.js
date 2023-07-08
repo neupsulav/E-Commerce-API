@@ -6,9 +6,13 @@ dotenv.config();
 const errorHandlerMiddleware = require("./middlewares/ErrorHandlerMiddleware");
 const noRoute = require("./middlewares/noRoute");
 const morgan = require("morgan");
+const categoryRoute = require("./routers/category");
+
+// routes
+app.use(express.json());
+app.use("/api/category", categoryRoute);
 
 // middlewares
-app.use(express.json());
 app.use(morgan("tiny"));
 
 // errorHandlerMiddleware

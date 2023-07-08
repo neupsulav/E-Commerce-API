@@ -1,6 +1,7 @@
 const Category = require("../models/category");
 const catchAsync = require("../middlewares/catchAsync");
 const ErrorHandler = require("../middlewares/errorHandler");
+const mongoose = require("mongoose");
 
 // creating new category
 const createCategory = catchAsync(async (req, res, next) => {
@@ -10,7 +11,7 @@ const createCategory = catchAsync(async (req, res, next) => {
     return next(new ErrorHandler("Please enter all the values properly", 400));
   }
 
-  const newCategory = await Category.create({ name, color, icon });
+  const newCategory = await Category.create(req.body);
   newCategory.save();
 
   if (!newCategory) {
@@ -22,6 +23,10 @@ const createCategory = catchAsync(async (req, res, next) => {
 
 //deleting a category
 const deleteCategory = catchAsync(async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return next(new ErrorHandler("Invalid category ID", 400));
+  }
+
   const id = req.params.id;
 
   const deleteCategory = await Category.findByIdAndRemove({ _id: id });
@@ -44,8 +49,12 @@ const getAllCategories = catchAsync(async (req, res, next) => {
 
 //get a category
 const getCategory = catchAsync(async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return next(new ErrorHandler("Invalid category ID", 400));
+  }
+
   const id = req.params.id;
-  const singleCategory = await Category.find({ _id: id });
+  const singleCategory = await Category.findOne({ _id: id });
 
   if (!singleCategory) {
     return next(new ErrorHandler(`No category with id ${id} found`, 404));
@@ -55,6 +64,10 @@ const getCategory = catchAsync(async (req, res, next) => {
 
 //update a category
 const updateCategory = catchAsync(async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return next(new ErrorHandler("Invalid category ID", 400));
+  }
+
   const id = req.params.id;
   const updateCategory = await Category.findByIdAndUpdate(
     { _id: id },

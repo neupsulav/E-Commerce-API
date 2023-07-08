@@ -7,10 +7,12 @@ const errorHandlerMiddleware = require("./middlewares/ErrorHandlerMiddleware");
 const noRoute = require("./middlewares/noRoute");
 const morgan = require("morgan");
 const categoryRoute = require("./routers/category");
+const productRoute = require("./routers/product");
 
 // routes
 app.use(express.json());
 app.use("/api/category", categoryRoute);
+app.use("/api/products", productRoute);
 
 // middlewares
 app.use(morgan("tiny"));

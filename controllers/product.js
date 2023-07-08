@@ -44,9 +44,14 @@ const deleteProduct = catchAsync(async (req, res, next) => {
   res.status(200).json({ success: true, msg: "Successfully deleted" });
 });
 
-//get all products
+//get all products(filter for categories)
 const getProducts = catchAsync(async (req, res, next) => {
-  const products = await Product.find({}).populate("category");
+  //http://localhost:3000/api/products?categories=123456789,987654321
+  let filter = {};
+  if (req.query.categories) {
+    filter = { category: req.query.categories.split(",") };
+  }
+  const products = await Product.find(filter).populate("category");
 
   res.status(200).send(products);
 });
@@ -97,10 +102,27 @@ const updateProduct = catchAsync(async (req, res, next) => {
   res.status(200).send(product);
 });
 
+//get product count
+const productCount = catchAsync(async (req, res, next) => {
+  const count = (await Product.find({})).length;
+
+  res.status(200).json({ count: count });
+});
+
+//get featured products
+const featuredProducts = catchAsync(async (req, res, next) => {
+  const count = req.params.count ? req.params.count : 0;
+  const featured = await Product.find({ isFeatured: true }).limit(+count);
+
+  res.status(200).send(featured);
+});
+
 module.exports = {
   createProduct,
   deleteProduct,
   getProducts,
   getProduct,
   updateProduct,
+  productCount,
+  featuredProducts,
 };

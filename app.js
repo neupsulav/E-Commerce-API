@@ -8,11 +8,13 @@ const noRoute = require("./middlewares/noRoute");
 const morgan = require("morgan");
 const categoryRoute = require("./routers/category");
 const productRoute = require("./routers/product");
+const userRoute = require("./routers/user");
 
 // routes
 app.use(express.json());
 app.use("/api/category", categoryRoute);
 app.use("/api/products", productRoute);
+app.use("/api/user", userRoute);
 
 // middlewares
 app.use(morgan("tiny"));

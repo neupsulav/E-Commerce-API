@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const authentication = require("../middlewares/authentication");
 
 const {
   createCategory,
@@ -9,12 +10,16 @@ const {
   updateCategory,
 } = require("../controllers/category");
 
-router.route("/").post(createCategory).get(getAllCategories);
+// routers without authentication
+router.route("/").get(getAllCategories);
 
-router
-  .route("/:id")
-  .delete(deleteCategory)
-  .get(getCategory)
-  .patch(updateCategory);
+router.route("/:id").get(getCategory);
+
+//routers with authentication
+router.post("/", authentication, createCategory);
+
+router.delete("/:id", authentication, deleteCategory);
+
+router.patch("/:id", authentication, updateCategory);
 
 module.exports = router;

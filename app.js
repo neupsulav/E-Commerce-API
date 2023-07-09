@@ -9,12 +9,11 @@ const morgan = require("morgan");
 const categoryRoute = require("./routers/category");
 const productRoute = require("./routers/product");
 const userRoute = require("./routers/user");
-const authentication = require("./middlewares/authentication");
 
 // routes
 app.use(express.json());
-app.use("/api/category", authentication, categoryRoute);
-app.use("/api/products", authentication, productRoute);
+app.use("/api/category", categoryRoute);
+app.use("/api/products", productRoute);
 app.use("/api/user", userRoute);
 
 // middlewares

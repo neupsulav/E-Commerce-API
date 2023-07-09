@@ -5,6 +5,10 @@ const mongoose = require("mongoose");
 
 // creating new category
 const createCategory = catchAsync(async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
   const { name, color, icon } = req.body;
 
   if (!name || !color || !icon) {
@@ -25,6 +29,14 @@ const createCategory = catchAsync(async (req, res, next) => {
 const deleteCategory = catchAsync(async (req, res, next) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return next(new ErrorHandler("Invalid category ID", 400));
+  }
+
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
   }
 
   const id = req.params.id;
@@ -68,7 +80,12 @@ const updateCategory = catchAsync(async (req, res, next) => {
     return next(new ErrorHandler("Invalid category ID", 400));
   }
 
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
   const id = req.params.id;
+
   const updateCategory = await Category.findByIdAndUpdate(
     { _id: id },
     req.body,

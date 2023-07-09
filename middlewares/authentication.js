@@ -18,6 +18,7 @@ const authentication = catchAsync(async (req, res, next) => {
     userId: payload.userId,
     userName: payload.userName,
     userEmail: payload.userEmail,
+    isAdmin: payload.isAdmin,
   };
 
   next();

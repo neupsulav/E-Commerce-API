@@ -6,6 +6,10 @@ const mongoose = require("mongoose");
 
 //create a product
 const createProduct = catchAsync(async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
   const { name, description, category, countInStock } = req.body;
 
   if (!name || !description || !category || !countInStock) {
@@ -31,6 +35,10 @@ const createProduct = catchAsync(async (req, res, next) => {
 const deleteProduct = catchAsync(async (req, res, next) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return next(new ErrorHandler("Invalid product ID", 400));
+  }
+
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
   }
 
   const id = req.params.id;
@@ -78,6 +86,10 @@ const updateProduct = catchAsync(async (req, res, next) => {
     return next(new ErrorHandler("Invalid product ID", 400));
   }
 
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
   const { name, description, category, countInStock } = req.body;
 
   if (!name || !description || !category || !countInStock) {
@@ -104,6 +116,10 @@ const updateProduct = catchAsync(async (req, res, next) => {
 
 //get product count
 const productCount = catchAsync(async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
   const count = (await Product.find({})).length;
 
   res.status(200).json({ count: count });

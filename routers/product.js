@@ -17,11 +17,11 @@ router.route("/").get(getProducts);
 
 router.route("/:id").get(getProduct);
 
-router.route("/get/count").get(productCount);
-
 router.route("/get/featured/:count").get(featuredProducts);
 
 //routers with authentication
+router.get("/get/count", authentication, productCount);
+
 router.post("/", authentication, createProduct);
 
 router.delete("/:id", authentication, deleteProduct);

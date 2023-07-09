@@ -62,7 +62,12 @@ userSchema.methods.comparePassword = async function (passwordHash) {
 //get jsonWebToken
 userSchema.methods.getJWT = async function () {
   const token = jwt.sign(
-    { userId: this._id, userName: this.name, userEmail: this.email },
+    {
+      userId: this._id,
+      userName: this.name,
+      userEmail: this.email,
+      isAdmin: this.isAdmin,
+    },
     process.env.SECRET_KEY,
     { expiresIn: process.env.expiresIn }
   );

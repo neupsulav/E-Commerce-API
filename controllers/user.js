@@ -70,9 +70,43 @@ const login = catchAsync(async (req, res, next) => {
   res.status(200).json({ msg: "user logged in successfully", token: token });
 });
 
+//get user count
+const userCount = catchAsync(async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
+  const count = (await User.find({})).length;
+
+  res.status(200).json({ count: count });
+});
+
+//delete a user
+const deleteUser = catchAsync(async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return next(new ErrorHandler("Invalid user ID", 400));
+  }
+
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
+  const id = req.params.id;
+
+  const user = await User.findByIdAndRemove({ _id: id });
+
+  if (!user) {
+    return next(new ErrorHandler("UserS not found", 404));
+  }
+
+  res.status(200).json({ success: true, msg: "Successfully deleted" });
+});
+
 module.exports = {
   register,
   getUsers,
   getUser,
   login,
+  userCount,
+  deleteUser,
 };

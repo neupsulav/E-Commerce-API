@@ -9,12 +9,14 @@ const morgan = require("morgan");
 const categoryRoute = require("./routers/category");
 const productRoute = require("./routers/product");
 const userRoute = require("./routers/user");
+const orderRoute = require("./routers/order");
 
 // routes
 app.use(express.json());
 app.use("/api/category", categoryRoute);
 app.use("/api/products", productRoute);
 app.use("/api/user", userRoute);
+app.use("/api/order", orderRoute);
 
 // middlewares
 app.use(morgan("tiny"));

@@ -7,7 +7,10 @@ const {
   createOrders,
   getOrder,
   updateOrder,
-  deleteProduct,
+  deleteOrder,
+  totalSales,
+  orderCount,
+  getUserOrders,
 } = require("../controllers/order");
 
 //routers with authentication
@@ -19,6 +22,12 @@ router.post("/", authentication, createOrders);
 
 router.patch("/:id", authentication, updateOrder);
 
-router.delete("/:id", authentication, deleteProduct);
+router.delete("/:id", authentication, deleteOrder);
+
+router.get("/get/totalsales", authentication, totalSales);
+
+router.get("/get/count", authentication, orderCount);
+
+router.get("/get/userorder/:id", authentication, getUserOrders);
 
 module.exports = router;

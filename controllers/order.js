@@ -3,7 +3,6 @@ const catchAsync = require("../middlewares/catchAsync");
 const ErrorHandler = require("../middlewares/errorHandler");
 const OrderItems = require("../models/order-items");
 const { default: mongoose } = require("mongoose");
-const orderItems = require("../models/order-items");
 
 //get all the orders
 const getOrders = catchAsync(async (req, res, next) => {
@@ -57,6 +56,20 @@ const createOrders = catchAsync(async (req, res, next) => {
 
   const orderItemsResolved = await orderItemsIds;
 
+  //calculate total price for a order
+  const totalprices = await Promise.all(
+    orderItemsResolved.map(async (orderItemIds) => {
+      const orderItem = await OrderItems.findOne({
+        _id: orderItemIds,
+      }).populate("product", "price");
+
+      const totalPrice = orderItem.product.price * orderItem.quantity;
+      return totalPrice;
+    })
+  );
+
+  const totalPrice = totalprices.reduce((a, b) => a + b, 0);
+
   const orders = await Order.create({
     orderItems: orderItemsResolved,
     shippingAddress1: req.body.shippingAddress1,
@@ -66,13 +79,13 @@ const createOrders = catchAsync(async (req, res, next) => {
     country: req.body.country,
     phone: req.body.phone,
     status: req.body.status,
-    // totalPrice: totalPrice,
+    totalPrice: totalPrice,
     user: req.body.user,
   });
 
   orders.save();
 
-  res.status(201).json({ msg: "Order successfully created" });
+  res.status(201).json({ msg: "Order successfully created", orders });
 });
 
 //update a order
@@ -105,7 +118,7 @@ const updateOrder = catchAsync(async (req, res, next) => {
 });
 
 //delete a order
-const deleteProduct = catchAsync(async (req, res, next) => {
+const deleteOrder = catchAsync(async (req, res, next) => {
   if (!mongoose.isValidObjectId(req.params.id)) {
     return next(new ErrorHandler("Invalid OrderID", 400));
   }
@@ -120,9 +133,61 @@ const deleteProduct = catchAsync(async (req, res, next) => {
 
   if (!order) {
     return next(new ErrorHandler(`Order not found with orderID ${id}`, 404));
+  } else {
+    order.orderItems.map(async (orderItems) => {
+      await OrderItems.findByIdAndRemove(orderItems);
+    });
   }
 
   res.status(200).json({ success: true, msg: "Successfully deleted" });
+});
+
+//get total sales
+const totalSales = catchAsync(async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
+  const totalSale = await Order.aggregate([
+    { $group: { _id: null, totalSales: { $sum: "$totalPrice" } } },
+  ]);
+
+  if (!totalSale) {
+    return next(new ErrorHandler("Couldn't get totalsales", 400));
+  }
+
+  res.status(200).send({ totalsales: totalSale.pop().totalSales });
+});
+
+//get order count
+const orderCount = catchAsync(async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
+  const count = (await Order.find({})).length;
+
+  res.status(200).json({ count: count });
+});
+
+//get user orders
+const getUserOrders = catchAsync(async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return next(new ErrorHandler("Invalid User ID", 400));
+  }
+
+  const userOrdersList = await Order.find({ user: req.params.id })
+    .populate({
+      path: "orderItems",
+      populate: { path: "product", populate: "category" },
+    })
+    .sort({ dateOrdered: -1 });
+
+  if (!userOrdersList) {
+    return next(new ErrorHandler("User order list couldn't be retrieved", 400));
+  }
+
+  res.status(200).send(userOrdersList);
 });
 
 module.exports = {
@@ -130,5 +195,8 @@ module.exports = {
   createOrders,
   getOrder,
   updateOrder,
-  deleteProduct,
+  deleteOrder,
+  totalSales,
+  orderCount,
+  getUserOrders,
 };

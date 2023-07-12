@@ -21,8 +21,27 @@ const createProduct = catchAsync(async (req, res, next) => {
     return next(new ErrorHandler("Invalid category", 400));
   }
 
-  const newProduct = await Product.create(req.body);
-  newProduct.save();
+  //for multer image upload
+  const file = req.file;
+  if (!file) return next(new ErrorHandler("Image file not received", 400));
+
+  const fileName = file.filename;
+  const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
+
+  const newProduct = await Product.create({
+    name: req.body.name,
+    description: req.body.description,
+    richDescription: req.body.richDescription,
+    image: `${basePath}${fileName}`, // "http://localhost:3000/public/upload/image-2323232"
+    brand: req.body.brand,
+    price: req.body.price,
+    category: req.body.category,
+    countInStock: req.body.countInStock,
+    rating: req.body.rating,
+    numReviews: req.body.numReviews,
+    isFeatured: req.body.isFeatured,
+  });
+  await newProduct.save();
 
   if (!newProduct) {
     return next(new ErrorHandler("Product cannot be created", 400));
@@ -90,15 +109,11 @@ const updateProduct = catchAsync(async (req, res, next) => {
     return next(new ErrorHandler("User is not authorized", 400));
   }
 
-  const { name, description, category, countInStock } = req.body;
-
-  if (!name || !description || !category || !countInStock) {
-    return next(new ErrorHandler("Please fill all the fields properly", 400));
-  }
-
-  const findCategory = await Category.findOne({ _id: req.body.category });
-  if (!findCategory) {
-    return next(new ErrorHandler("Invalid category", 400));
+  if (req.body.category) {
+    const findCategory = await Category.findOne({ _id: req.body.category });
+    if (!findCategory) {
+      return next(new ErrorHandler("Invalid category", 400));
+    }
   }
 
   const id = req.params.id;
@@ -108,7 +123,7 @@ const updateProduct = catchAsync(async (req, res, next) => {
   }).populate("category");
 
   if (!product) {
-    return next(new ErrorHandler(`No category with id ${id} found`, 404));
+    return next(new ErrorHandler(`No product with id ${id} found`, 404));
   }
 
   res.status(200).send(product);
@@ -133,6 +148,53 @@ const featuredProducts = catchAsync(async (req, res, next) => {
   res.status(200).send(featured);
 });
 
+//update product image gallery
+const productImageGalleryUpdate = catchAsync(async (req, res, next) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return next(new ErrorHandler("Invalid product ID", 400));
+  }
+
+  if (!req.user.isAdmin) {
+    return next(new ErrorHandler("User is not authorized", 400));
+  }
+
+  if (req.body.category) {
+    const findCategory = await Category.findOne({ _id: req.body.category });
+    if (!findCategory) {
+      return next(new ErrorHandler("Invalid category", 400));
+    }
+  }
+
+  const id = req.params.id;
+
+  // multer
+  const files = req.files;
+  let imagesPaths = [];
+  const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
+
+  if (files) {
+    files.map((file) => {
+      imagesPaths.push(`${basePath}${file.filename}`);
+    });
+  }
+
+  const product = await Product.findByIdAndUpdate(
+    { _id: id },
+    {
+      images: imagesPaths,
+    },
+    {
+      new: true,
+    }
+  ).populate("category");
+
+  if (!product) {
+    return next(new ErrorHandler(`No product with id ${id} found`, 404));
+  }
+
+  res.status(200).send(product);
+});
+
 module.exports = {
   createProduct,
   deleteProduct,
@@ -141,4 +203,5 @@ module.exports = {
   updateProduct,
   productCount,
   featuredProducts,
+  productImageGalleryUpdate,
 };
